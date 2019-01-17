@@ -1,0 +1,86 @@
+
+```{r global_options, include = FALSE}
+logg = read.delim("log_Norte.txt", header = FALSE, stringsAsFactor = FALSE)
+
+knitr::opts_chunk$set(
+  fig.width = 8, 
+  fig.height = 3, 
+  fig.path = paste0('Figuras/Norte_'),
+  echo = FALSE,
+  include = FALSE,
+  warning = FALSE,
+  message = FALSE)
+```
+---
+title: "Reporte del tiempo para la region Norte"
+author: "`r logg[2,1]`"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r datos}
+library(cowplot)
+
+tmax <- read.csv("Tablas/Tmax_Norte.csv", stringsAsFactor = FALSE, na.string = "-99")
+tmin <- read.csv("Tablas/Tmin_Norte.csv", stringsAsFactor = FALSE, na.string = "-99")
+prec <- read.csv("Tablas/Prec_Norte.csv", stringsAsFactor = FALSE, na.string = "-99")
+
+op <- as.data.frame(matrix( , ncol = 7, nrow = 7))
+colnames(op) <- c('nDia', 'Obs_tmax', 'Obs_tmin', 'Obs_prec', 'Pro_tmax', 'Pro_tmin', 'Pro_prec')
+op$nDia <- 1:7
+
+dia <- colnames(tmax)[-1]
+ciudad <- tmax[ ,1]
+```
+
+![](Figuras/leyenda.png)
+
+```{r grafica, include = TRUE}
+#par(mfrow = c(1,2), las = 1)
+
+for(i in 1:nrow(tmax)){
+
+  op$Obs_tmax[1:4] <- as.integer(tmax[i,2:5]) 
+  op$Obs_tmin[1:4] <- as.integer(tmin[i,2:5]) 
+  op$Obs_prec[1:4] <- as.integer(prec[i,2:5])
+  op$Pro_tmax[4:7] <- as.integer(tmax[i,5:8])
+  op$Pro_tmin[4:7] <- as.integer(tmin[i,5:8])
+  op$Pro_prec[4:7] <- as.integer(prec[i,5:8])  
+
+  op$Obs_prec[op$Obs_prec == 0] <- NA
+  op$Pro_prec[op$Pro_prec == 0] <- NA
+  
+  mx <- max(op$Obs_tmax, op$Pro_tmax, na.rm = TRUE)
+  mn <- min(op$Obs_tmin, op$Pro_tmin, na.rm = TRUE)
+  rn <- mx - mn
+  mx <- mx + 0.15*rn
+  mn <- mn - 0.15*rn
+  
+  gp <- ggplot(op, aes(x = nDia)) + 
+  geom_col(aes(y = Pro_prec/3*(mx-mn)+mn, fill = factor(Pro_prec)), color = '#808080', alpha = 0.15, width = 0.1) +
+  geom_col(aes(y = Obs_prec/3*(mx-mn)+mn, fill = factor(Obs_prec)), color = "#808080", width = 0.1) +
+  geom_line(aes(y = Pro_tmax), colour = 'orangered', linetype = 2) +
+  geom_line(aes(y = Pro_tmin), colour = 'dodgerblue', linetype = 2) +
+  geom_line(aes(y = Obs_tmax), colour = 'orangered', linetype = 1) +
+  geom_line(aes(y = Obs_tmin), colour = 'dodgerblue', linetype = 1) +
+  geom_point(aes(y = Pro_tmax), fill = 'white', colour = 'orangered', shape = 21, size = 7) +
+  geom_point(aes(y = Pro_tmin), fill = 'white', colour = 'dodgerblue', shape = 21, size = 7) +
+  geom_point(aes(y = Obs_tmax), fill = 'orangered', colour = 'orangered', shape = 21, size = 7) +
+  geom_point(aes(y = Obs_tmin), fill = 'dodgerblue', colour = 'dodgerblue', shape = 21, size = 7) +
+	geom_text(aes(label = Pro_tmax, y = Pro_tmax), colour = 'orangered', size = 3) +
+	geom_text(aes(label = Pro_tmin, y = Pro_tmin), colour = 'dodgerblue', size = 3) +
+	geom_text(aes(label = Obs_tmax, y = Obs_tmax), colour = 'white', size = 3) +
+	geom_text(aes(label = Obs_tmin, y = Obs_tmin), colour = 'white', size = 3) +
+	scale_fill_manual(values = c('#C0C0C0', '#A0A0A0', '#808080')) +
+  scale_x_continuous(breaks = 1:7, labels = dia, name = '') +
+  scale_y_continuous(name = 'Temperatura',
+		sec.axis = sec_axis(~./(mx-mn)*3 - mn/(mx-mn)*3, name = 'Lluvia', labels = c(" ", "Ligera", "Moderada", "Intensa"))) +
+	coord_cartesian(ylim = c(mn, mx)) +
+  ggtitle(ciudad[i]) +
+  theme(legend.position = 'none')
+  
+  plot(gp)
+  
+}
+
+```
