@@ -44,7 +44,8 @@ ui <-dashboardPage(
       menuItem('Pronostico', tabName = 'pronos', icon = icon('list-alt')),
       menuItem('Links', tabName = 'links' , icon = icon('fab fa-chrome')),
       menuItem('Directivas', tabName = 'directivas', icon = icon('fas fa-book')),
-      menuItem('Glosario', tabName = 'glosario', icon = icon('book open'))
+      menuItem('Glosario', tabName = 'glosario', icon = icon('book open')),
+      menuItem('Climatologia', tabName = 'clima', icon = icon('fas fa-book'))
       
     )
   
@@ -468,6 +469,34 @@ ui <-dashboardPage(
         )
       
       ),
+      ####################################################
+      #Climatologia
+	          tabItem(tabName = 'clima',
+                fluidRow(
+                  box(width = 5,title = 'Ubicación Geográfica',leafletOutput("mymap")), #leaflet
+                  box(width = 5,title = 'Gráfica',
+                      plotlyOutput(outputId = "distPlot")
+                  ),
+                  box(
+                    width = 2,
+                    selectInput(inputId = 'sel',
+                                label = 'Seleccione un departamento',
+                                choices = stn ,
+                                selected = "Lima"
+                    ),
+                    h3('Capital:'),
+                    verbatimTextOutput(outputId = 'dista', placeholder = TRUE),
+                    h3('Estación:'),
+                    verbatimTextOutput(outputId = 'holo', placeholder = TRUE),
+                    radioButtons("radio", h3("Tipo de gráfica"),
+                                 choices = Graf,selected = "Temperatura")
+                      ),
+                  
+                box(width = 5, title = 'Estadísticos', side = 'center',
+                      tableOutput(outputId = 'brun')
+                  )
+                               )
+                  ),
       
       ####################################################
       # Sección de glosario
